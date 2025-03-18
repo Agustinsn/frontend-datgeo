@@ -1,11 +1,11 @@
-import { Pagination } from "@mui/material";
+import { Box } from "@mui/material";
+import UserTable from "../../components/UserTable/UserTable";
 
 export const Home = () => {
   return (
-    <div>
+    <Box sx={{ padding: 2 }}>
       <h1>Usuarios registrados</h1>
-
-      <Pagination count={10} color="primary" />
-    </div>
+      <UserTable />
+    </Box>
   );
 };
