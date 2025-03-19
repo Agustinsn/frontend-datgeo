@@ -22,7 +22,7 @@ export const AddUserDialog = ({
 
   return (
     <Dialog open={open} onClose={handleClose}>
-      <UserForm />
+      <UserForm mode="add" />
     </Dialog>
   );
 };

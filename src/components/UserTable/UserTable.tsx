@@ -9,21 +9,16 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DeleteUserModal } from "../DeleteUserModal/DeleteUserModal";
 import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
-
-interface IUser {
-  id: number;
-  name: string;
-  lastName: string;
-  email: string;
-  status: boolean;
-}
+import { useUserContext } from "../../utils/useUserContext";
+import { Link } from "react-router-dom";
 
 export default function UserTable() {
-  const [users, setUsers] = useState<IUser[]>([]);
+  const context = useUserContext();
+  const { users } = context;
   const [page, setPage] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -41,28 +36,9 @@ export default function UserTable() {
     .filter((user) => user.status)
     .slice(page * 50, page * 50 + 50);
 
-  useEffect(() => {
-    setUsers([
-      {
-        id: 1,
-        name: "John",
-        lastName: "Doe",
-        email: "johndoe@gmail.com",
-        status: true,
-      },
-      {
-        id: 2,
-        name: "Jane",
-        lastName: "Doe",
-        email: "",
-        status: true,
-      },
-    ]);
-  }, []);
-
   return (
     <Box px={2} overflow={"hidden"} width={"70%"} alignSelf={"center"}>
-      <TableContainer sx={{ maxHeight: "70vh" }}>
+      <TableContainer sx={{ height: "70vh" }}>
         <Table stickyHeader aria-label="sticky table">
           <HeaderTable />
           <TableBody>
@@ -73,13 +49,11 @@ export default function UserTable() {
                   <TableCell align="center">{user.lastName}</TableCell>
                   <TableCell align="center">{user.email}</TableCell>
                   <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={onClickDelete}
-                    >
-                      <ManageAccountsOutlinedIcon />
-                    </Button>
+                    <Link to={`/user/${user.id}`}>
+                      <Button variant="outlined">
+                        <ManageAccountsOutlinedIcon />
+                      </Button>
+                    </Link>
                   </TableCell>
                   <TableCell align="center">
                     <Button
@@ -92,7 +66,7 @@ export default function UserTable() {
                   </TableCell>
                 </TableRow>
                 <DeleteUserModal
-                  id={user.id}
+                  id={user.id ? user.id : 0}
                   openModal={openModal}
                   onClose={onCloseModal}
                 />
