@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { DeleteUserModal } from "../DeleteUserModal/DeleteUserModal";
+import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 
 interface IUser {
   id: number;
@@ -48,62 +50,102 @@ export default function UserTable() {
         email: "johndoe@gmail.com",
         status: true,
       },
+      {
+        id: 2,
+        name: "Jane",
+        lastName: "Doe",
+        email: "",
+        status: true,
+      },
     ]);
   }, []);
 
   return (
-    <Box>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <HeaderTable />
-            <TableBody>
-              {visibleUsers.map((user) => (
-                <>
-                  <TableRow key={user.id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.lastName}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>ojito</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={onClickDelete}
-                      >
-                        X
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  <DeleteUserModal
-                    id={user.id}
-                    openModal={openModal}
-                    onClose={onCloseModal}
-                  />
-                </>
-              ))}
-            </TableBody>
-            <TablePagination
-              component="div"
-              count={users.length}
-              rowsPerPage={50}
-              onPageChange={handleChangePage}
-              page={page}
-            />
-          </TableHead>
+    <Box px={2} overflow={"hidden"} width={"70%"} alignSelf={"center"}>
+      <TableContainer sx={{ maxHeight: "70vh" }}>
+        <Table stickyHeader aria-label="sticky table">
+          <HeaderTable />
+          <TableBody>
+            {visibleUsers.map((user) => (
+              <>
+                <TableRow key={user.id}>
+                  <TableCell align="center">{user.name}</TableCell>
+                  <TableCell align="center">{user.lastName}</TableCell>
+                  <TableCell align="center">{user.email}</TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={onClickDelete}
+                    >
+                      <ManageAccountsOutlinedIcon />
+                    </Button>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={onClickDelete}
+                    >
+                      <PersonRemoveOutlinedIcon />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <DeleteUserModal
+                  id={user.id}
+                  openModal={openModal}
+                  onClose={onCloseModal}
+                />
+              </>
+            ))}
+          </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={users.length}
+        rowsPerPage={50}
+        onPageChange={handleChangePage}
+        page={page}
+      />
     </Box>
   );
 }
 
 const HeaderTable = () => {
-  const headers = ["Nombre", "Apellido", "Email", "Ver/Editar", "Dar de baja"];
+  const columns = [
+    { id: "name", label: "Nombre", width: 100 },
+    { id: "lastName", label: "Apellido", width: 100 },
+    {
+      id: "email",
+      label: "Correo",
+      width: 170,
+    },
+    {
+      id: "action",
+      label: "Ver/editar",
+      width: 170,
+    },
+    {
+      id: "delete",
+      label: "Dar de baja",
+      width: 170,
+    },
+  ];
+
   return (
-    <TableRow>
-      {headers.map((header) => (
-        <TableCell>{header}</TableCell>
-      ))}
-    </TableRow>
+    <TableHead>
+      <TableRow>
+        {columns.map((column) => (
+          <TableCell
+            key={column.id}
+            style={{ width: column.width, fontWeight: "bold" }}
+            align="center"
+          >
+            {column.label}
+          </TableCell>
+        ))}
+      </TableRow>
+    </TableHead>
   );
 };
