@@ -24,12 +24,9 @@ export default function UserTable() {
   const [users, setUsers] = useState<IUser[]>([]);
   const [page, setPage] = useState(0);
   const [openModal, setOpenModal] = useState(false);
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
-  const visibleUsers = users
-    .filter((user) => user.status)
-    .slice(page * 50, page * 50 + 50);
 
   const onClickDelete = () => {
     setOpenModal(true);
@@ -37,6 +34,10 @@ export default function UserTable() {
   const onCloseModal = () => {
     setOpenModal(false);
   };
+
+  const visibleUsers = users
+    .filter((user) => user.status)
+    .slice(page * 50, page * 50 + 50);
 
   useEffect(() => {
     setUsers([
@@ -55,13 +56,7 @@ export default function UserTable() {
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Apellido</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Ver/Editar</TableCell>
-              <TableCell>Dar de baja</TableCell>
-            </TableRow>
+            <HeaderTable />
             <TableBody>
               {visibleUsers.map((user) => (
                 <>
@@ -101,3 +96,14 @@ export default function UserTable() {
     </Box>
   );
 }
+
+const HeaderTable = () => {
+  const headers = ["Nombre", "Apellido", "Email", "Ver/Editar", "Dar de baja"];
+  return (
+    <TableRow>
+      {headers.map((header) => (
+        <TableCell>{header}</TableCell>
+      ))}
+    </TableRow>
+  );
+};
