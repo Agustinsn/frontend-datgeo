@@ -1,5 +1,6 @@
 export const deleteUser = async (id: number) => {
-    const response = await fetch(`/api/employees/${id}`, {
+    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const response = await fetch(`${API_URL}/employees/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
