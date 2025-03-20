@@ -1,5 +1,6 @@
 export const getUsers = async () => {
-    const response = await fetch("http://localhost:3000/employees");
+    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const response = await fetch(`${API_URL}/employees`);
     const data = await response.json();
     return data;
 }

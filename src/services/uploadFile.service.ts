@@ -12,8 +12,9 @@ export const uploadFile = async (file: File,type:"dni" | "license" | "cv"): Prom
     }
   
     try {
+      const API_URL = import.meta.env.VITE_BACKEND_URL;
       const response = await fetch(
-        `http://localhost:3000/s3/upload-url?fileName=${encodeURIComponent(file.name)}&contentType=${file.type}`
+        `${API_URL}/s3/upload-url?fileName=${encodeURIComponent(file.name)}&contentType=${file.type}`
       );
       const data = await response.json();
   
@@ -35,7 +36,7 @@ export const uploadFile = async (file: File,type:"dni" | "license" | "cv"): Prom
         is_active:false
       }
 
-      const responseDoc = await fetch("http://localhost:3000/documents", {
+      const responseDoc = await fetch(`${API_URL}/documents`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

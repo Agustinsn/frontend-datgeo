@@ -1,7 +1,9 @@
 export const getFile= async (fileName: string): Promise<Blob | null> => {
+  
     try {
+      const API_URL = import.meta.env.VITE_BACKEND_URL;
       const response = await fetch(
-        `http://localhost:3000/s3/download-url?fileName=${encodeURIComponent(fileName)}`
+        `${API_URL}/s3/download-url?fileName=${encodeURIComponent(fileName)}`
       );
   
       const data = await response.json();
