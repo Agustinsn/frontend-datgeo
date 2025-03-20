@@ -1,10 +1,25 @@
-import { Box, Button, Grid2, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  Grid2,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { UploadFileSection } from "../UploadFileSection/UploadFileSection";
-import { IUser } from "../../context/UsersContext";
+import { IJobType, IUser } from "../../context/UsersContext";
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../../utils/useUserContext";
 import { getUserContex } from "../../utils/getUserContex";
+import { blueGrey } from "@mui/material/colors";
+import { addUser } from "../../services/addUser.service";
+import { getJobs } from "../../services/getJobs.service";
+import { updateUser } from "../../services/updateUser.service";
 
 interface IUserFormProps {
   idUser?: number;
@@ -13,58 +28,94 @@ interface IUserFormProps {
 
 const baseFormData = {
   name: "",
-  lastName: "",
+  last_name: "",
   email: "",
   password: "",
-  job_title: "",
-  document: "",
+  job_type: { id: 0, name: "" },
+  dni: "",
   salary: 0,
-  dniPdf: "",
-  licensePdf: "",
-  cvPdf: "",
+  document_dni: { id: null, name: "", path: "", is_active: false },
+  document_license: { id: null, name: "", path: "", is_active: false },
+  document_cv: { id: null, name: "", path: "", is_active: false },
 };
 
 export const UserForm = ({ idUser, mode }: IUserFormProps) => {
-  const context = useUserContext();
-  const navigate = useNavigate();
-  const { users } = context;
   const [formData, setFormData] = useState<IUser>(baseFormData);
-  const disabledBtn = Object.values(formData).some((value) => value === "");
+  const [jobs, setJobs] = useState<IJobType[]>([]);
+  const { users, addUserContext, onEditedUser } = useUserContext();
+  const navigate = useNavigate();
+  const disabledBtn = false;
   const btnText = mode === "add" ? "Agregar usuario" : "Editar usuario";
-
-  useEffect(() => {
-    if (idUser && (mode === "edit" || mode === "view")) {
-      const user = getUserContex({ users, idUser });
-      if (user) setFormData(user);
-      else navigate("/");
-    }
-  }, [idUser, users, navigate, mode]);
 
   const onChangeField =
     (field: keyof IUser) => (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormData({ ...formData, [field]: event.target.value });
       // updateUser({ ...formData, [field]: event.target.value });
     };
-  const onSubmit = () => {
-    console.log("submit");
-    console.log(formData);
+  const onUploadFile = (url: string, type: "dni" | "license" | "cv") => {
+    setFormData({ ...formData, [`document_${type}`]: url });
   };
+
+  const onSubmit = () => {
+    if (mode === "add") {
+      addUser(formData);
+      addUserContext(formData);
+      onEditedUser("Usuario agregado correctamente");
+    }
+    if (mode === "edit" && idUser) {
+      updateUser(idUser, formData);
+      onEditedUser("Usuario editado correctamente");
+    }
+  };
+
+  const onChangeSelect = (event: SelectChangeEvent<number>) => {
+    setFormData({
+      ...formData,
+      job_type: { id: event.target.value as number, name: "" },
+    });
+  };
+
+  useEffect(() => {
+    if (idUser && (mode === "edit" || mode === "view")) {
+      const user = getUserContex({ users, idUser });
+      if (user) setFormData(user);
+    }
+  }, [idUser, users, navigate, mode]);
+
+  useEffect(() => {
+    async function getJobsData() {
+      await getJobs().then((jobs) => {
+        setJobs(jobs);
+      });
+    }
+
+    getJobsData();
+  }, []);
 
   return (
     <Box
       sx={{ display: "flex", flexDirection: "column", gap: 2 }}
       component="form"
       autoComplete="off"
-      padding={2}
       width={500}
       onSubmit={onSubmit}
+      bgcolor={"#f5f5f5"}
+      border={"solid 1px black"}
+      paddingBottom={3}
     >
       {mode === "add" && (
-        <Typography variant="h4" textAlign={"center"}>
+        <Typography
+          variant="h4"
+          bgcolor={blueGrey[600]}
+          textAlign={"center"}
+          fontWeight={"bold"}
+          padding={1}
+          color="white"
+        >
           Agregar usuario
         </Typography>
       )}
-      <Grid2 container spacing={2} bgcolor={"#f5f5f5"} padding={2}>
+      <Grid2 container spacing={2} padding={2} paddingBottom={0}>
         <Grid2 size={6}>
           <TextField
             required
@@ -78,10 +129,10 @@ export const UserForm = ({ idUser, mode }: IUserFormProps) => {
         <Grid2 size={6}>
           <TextField
             required
-            id="lastName"
+            id="last_name"
             label="Apellido"
-            value={formData.lastName}
-            onChange={onChangeField("lastName")}
+            value={formData.last_name}
+            onChange={onChangeField("last_name")}
             disabled={mode === "view"}
           />
         </Grid2>
@@ -97,8 +148,9 @@ export const UserForm = ({ idUser, mode }: IUserFormProps) => {
         </Grid2>
         <Grid2 size={6}>
           <TextField
-            required
+            required={mode === "add"}
             id="password"
+            type={mode === "view" ? "password" : "text"}
             label="Contraseña"
             value={formData.password}
             onChange={onChangeField("password")}
@@ -106,23 +158,34 @@ export const UserForm = ({ idUser, mode }: IUserFormProps) => {
           />
         </Grid2>
         <Grid2 size={6}>
-          <TextField
-            required
-            id="job_title"
-            label="Puesto"
-            value={formData.job_title}
-            onChange={onChangeField("job_title")}
-            disabled={mode === "view"}
-          />
+          <FormControl fullWidth>
+            <InputLabel id="jobTypeSelect">Puesto</InputLabel>
+            <Select
+              labelId="jobTypeSelect"
+              id="job_type"
+              value={formData.job_type?.id}
+              defaultValue={0}
+              label="Puesto"
+              onChange={onChangeSelect}
+              disabled={mode === "view"}
+              required
+            >
+              {jobs.map((job: IJobType) => (
+                <MenuItem key={job.id} value={job.id}>
+                  {job.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid2>
         <Grid2 size={6}>
           <TextField
-            required
             id="document"
             label="DNI"
-            value={formData.document}
-            onChange={onChangeField("document")}
+            value={formData.dni}
+            onChange={onChangeField("dni")}
             disabled={mode === "view"}
+            required
           />
         </Grid2>
         <Grid2 size={6}>
@@ -137,39 +200,26 @@ export const UserForm = ({ idUser, mode }: IUserFormProps) => {
         </Grid2>
         <Grid2 size={8}></Grid2>
       </Grid2>
-      {mode !== "view" ? (
-        <UploadFileSection type={"dni"} />
-      ) : (
-        <TextField
-          value={formData.dniPdf}
-          variant="outlined"
-          placeholder="Ningún archivo seleccionado"
-          aria-readonly
-          fullWidth
-        />
-      )}
-      {mode !== "view" ? (
-        <UploadFileSection type={"cv"} />
-      ) : (
-        <TextField
-          value={formData.cvPdf}
-          variant="outlined"
-          placeholder="Ningún archivo seleccionado"
-          aria-readonly
-          fullWidth
-        />
-      )}
-      {mode !== "view" ? (
-        <UploadFileSection type={"licencia"} />
-      ) : (
-        <TextField
-          value={formData.licensePdf}
-          variant="outlined"
-          placeholder="Ningún archivo seleccionado"
-          aria-readonly
-          fullWidth
-        />
-      )}
+
+      <UploadFileSection
+        mode={mode}
+        type={"dni"}
+        onUploadFile={onUploadFile}
+        document={formData.document_dni}
+      />
+      <UploadFileSection
+        mode={mode}
+        type={"cv"}
+        onUploadFile={onUploadFile}
+        document={formData.document_cv}
+      />
+      <UploadFileSection
+        mode={mode}
+        type={"license"}
+        onUploadFile={onUploadFile}
+        document={formData.document_license}
+      />
+
       {mode !== "view" && (
         <Button
           variant="contained"

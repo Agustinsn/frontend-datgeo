@@ -1,19 +1,32 @@
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import { UserContext } from "./UserContext";
+import { getUsers } from "../services/getUsers.service";
+
+export interface IJobType {
+  id: number;
+  name: string;
+}
+
+export interface Idocument {
+  id: number | null;
+  name: string;
+  path: string;
+  is_active: boolean;
+}
 
 export interface IUser {
   id?: number;
   name: string;
-  lastName: string;
+  last_name: string;
   email: string;
   password: string;
-  job_title: string;
-  document: string;
+  job_type: IJobType;
+  dni: string;
   salary: number;
-  dniPdf: string;
-  licensePdf: string;
-  cvPdf: string;
-  status?: boolean;
+  document_dni: Idocument;
+  document_license: Idocument;
+  document_cv: Idocument;
+  is_active?: boolean;
 }
 
 interface UserProviderProps {
@@ -21,35 +34,56 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [users, setUsers] = useState<IUser[]>([
-    {
-      id: 1,
-      name: "asd",
-      lastName: "asd",
-      email: "asd",
-      password: "asd",
-      job_title: "as",
-      document: "asd",
-      salary: 0,
-      dniPdf: "as",
-      licensePdf: "asd",
-      cvPdf: "asd",
-      status: true,
-    },
-  ]);
+  const [users, setUsers] = useState<IUser[]>([]);
+  const [editedUser, setEditedUser] = useState(false);
+  const [editedMessage, setEditedMessage] = useState("");
 
-  const updateUser = (updatedUser: IUser) => {
+  const addUserContext = (newUser: IUser) => {
+    setUsers((prevUsers) => [...prevUsers, newUser]);
+  };
+
+  const updateUserContext = (updatedUser: IUser) => {
     setUsers((prevUsers) =>
       prevUsers.map((user) => (user.id === updatedUser.id ? updatedUser : user))
     );
   };
 
-  const deleteUser = (id: number) => {
+  const deleteUserContext = (id: number) => {
     setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
   };
 
+  const onEditedUser = (message: string) => {
+    setEditedUser(true);
+    setEditedMessage(message);
+  };
+
+  const clear = () => {
+    setEditedUser(false);
+    setEditedMessage("");
+  };
+
+  useEffect(() => {
+    const getData = async () => {
+      const users: IUser[] = await getUsers();
+      setUsers(users);
+    };
+
+    getData();
+  }, []);
+
   return (
-    <UserContext.Provider value={{ users, updateUser, deleteUser }}>
+    <UserContext.Provider
+      value={{
+        users,
+        editedUser,
+        editedMessage,
+        addUserContext,
+        updateUserContext,
+        deleteUserContext,
+        onEditedUser,
+        clear,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

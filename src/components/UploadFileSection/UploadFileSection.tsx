@@ -1,52 +1,52 @@
 import { useState } from "react";
 import { Button, TextField, Box } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { uploadFile } from "../../services/uploadFile.service";
+import { Idocument } from "../../context/UsersContext";
+import { CloudDownload } from "@mui/icons-material";
+import { getFile } from "../../services/getFile.service";
 
 interface IUploadFileSection {
-  type: "dni" | "licencia" | "cv";
+  mode: "view" | "edit" | "add";
+  type: "dni" | "license" | "cv";
+  onUploadFile: (url: string, type: "dni" | "license" | "cv") => void;
+  document: Idocument;
 }
 
-export const UploadFileSection = ({ type }: IUploadFileSection) => {
-  const [file, setFile] = useState<File | null>(null);
+export const UploadFileSection = ({
+  mode,
+  type,
+  onUploadFile,
+  document,
+}: IUploadFileSection) => {
   const [fileName, setFileName] = useState<string>("");
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-
-    if (selectedFile && selectedFile.type === "application/pdf") {
-      setFile(selectedFile);
-      setFileName(selectedFile.name);
-    } else {
-      alert("Por favor, selecciona un archivo PDF.");
-      setFile(null);
-      setFileName("");
-    }
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    await uploadFile(event.target.files![0], type).then((id) => {
+      if (id) {
+        onUploadFile(id, type);
+        setFileName(event.target.files![0].name);
+      }
+    });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!file) {
-      alert("No has seleccionado ningún archivo.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("pdfFile", file);
-  };
+  if (mode === "view") {
+    return <FileSection name={document?.name} type={type} />;
+  }
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      {/* Input oculto para seleccionar el archivo */}
+    <Box component="form" paddingX={2}>
       <input
         type="file"
         accept="application/pdf"
         onChange={handleFileChange}
-        id="fileInput"
+        id={type}
         style={{ display: "none" }}
       />
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <label htmlFor="fileInput" style={{ width: "80%" }}>
+        <label htmlFor={type} style={{ width: "80%" }}>
           <Button
             variant="outlined"
             component="span"
@@ -57,13 +57,55 @@ export const UploadFileSection = ({ type }: IUploadFileSection) => {
           </Button>
         </label>
         <TextField
-          value={fileName}
+          value={document?.name ?? fileName}
           variant="outlined"
           placeholder="Ningún archivo seleccionado"
           aria-readonly
           fullWidth
         />
       </Box>
+    </Box>
+  );
+};
+
+const FileSection = ({
+  name,
+  type,
+}: {
+  name: string;
+  type: "dni" | "license" | "cv";
+}) => {
+  const onDownloadFile = async () => {
+    if (!name) return;
+    const blob = await getFile(name);
+    if (!blob) {
+      console.error("Error al descargar el PDF");
+      return;
+    }
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", name);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Box display={"flex"}>
+      <TextField
+        value={name ?? "Ningún archivo subido"}
+        label={type.toUpperCase()}
+        variant="outlined"
+        placeholder="Ningún archivo subido"
+        sx={{ paddingX: 2 }}
+        aria-readonly
+        fullWidth
+      />
+      <Button onClick={onDownloadFile}>
+        <CloudDownload />
+      </Button>
     </Box>
   );
 };

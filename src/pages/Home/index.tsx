@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Snackbar } from "@mui/material";
 import { blueGrey } from "@mui/material/colors";
 import UserTable from "../../components/UserTable/UserTable";
 import { AddUserDialog } from "../../components/AddUserDialog/AddUserDialog";
 import PersonAddAltOutlinedIcon from "@mui/icons-material/PersonAddAltOutlined";
+import { useUserContext } from "../../utils/useUserContext";
 
 export const Home = () => {
   const [openNewUserDialog, setOpenNewUserDialog] = useState(false);
+  const { editedUser, editedMessage, clear } = useUserContext();
+
   const onOpenNewUserDialog = () => {
     setOpenNewUserDialog(true);
   };
@@ -43,6 +46,12 @@ export const Home = () => {
       <AddUserDialog
         openDialog={openNewUserDialog}
         onCloseDialog={onCloseNewUserDialog}
+      />
+      <Snackbar
+        open={editedUser}
+        autoHideDuration={4000}
+        onClose={() => clear()}
+        message={editedMessage}
       />
     </Box>
   );

@@ -1,5 +1,7 @@
 import { Box, Button, Modal, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
+import { deleteUser } from "../../services/deleteUser.service";
+import { useUserContext } from "../../utils/useUserContext";
 const style = {
   position: "absolute",
   top: "50%",
@@ -24,9 +26,23 @@ export const DeleteUserModal = ({
   onClose,
 }: IDeleteUserModal) => {
   const [open, setOpen] = useState(false);
+  const { deleteUserContext, onEditedUser } = useUserContext();
   const handleClose = () => {
     setOpen(false);
     onClose();
+  };
+
+  const onSubmit = async () => {
+    const response = await deleteUser(id);
+
+    if (response.ok) {
+      deleteUserContext(id);
+      onEditedUser("Usuario eliminado correctamente");
+      onClose();
+    } else {
+      onEditedUser("Error al eliminar el usuario");
+      onClose();
+    }
   };
 
   useEffect(() => {
@@ -34,24 +50,26 @@ export const DeleteUserModal = ({
   }, [openModal]);
 
   return (
-    <Modal open={open} onClose={handleClose} closeAfterTransition>
-      <Box sx={style}>
-        <Typography>
-          ¿Estás seguro que quieres eliminar el usuario con id {id}?
-        </Typography>
-        <Stack
-          spacing={2}
-          direction="row"
-          sx={{ marginTop: 2, justifyContent: "center" }}
-        >
-          <Button onClick={handleClose} variant="contained">
-            Cancelar
-          </Button>
-          <Button variant="contained" color="error">
-            Eliminar
-          </Button>
-        </Stack>
-      </Box>
-    </Modal>
+    <>
+      <Modal open={open} onClose={handleClose} closeAfterTransition>
+        <Box sx={style}>
+          <Typography>
+            ¿Estás seguro que quieres eliminar el usuario con id {id}?
+          </Typography>
+          <Stack
+            spacing={2}
+            direction="row"
+            sx={{ marginTop: 2, justifyContent: "center" }}
+          >
+            <Button onClick={handleClose} variant="contained">
+              Cancelar
+            </Button>
+            <Button onClick={onSubmit} variant="contained" color="error">
+              Eliminar
+            </Button>
+          </Stack>
+        </Box>
+      </Modal>
+    </>
   );
 };

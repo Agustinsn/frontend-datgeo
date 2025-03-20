@@ -21,19 +21,21 @@ export default function UserTable() {
   const { users } = context;
   const [page, setPage] = useState(0);
   const [openModal, setOpenModal] = useState(false);
+  const [idSelected, setIdSelected] = useState(0);
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const onClickDelete = () => {
+  const onClickDelete = (id: number) => {
     setOpenModal(true);
+    setIdSelected(id);
   };
   const onCloseModal = () => {
     setOpenModal(false);
   };
 
   const visibleUsers = users
-    .filter((user) => user.status)
+    .filter((user) => user.is_active)
     .slice(page * 50, page * 50 + 50);
 
   return (
@@ -43,34 +45,28 @@ export default function UserTable() {
           <HeaderTable />
           <TableBody>
             {visibleUsers.map((user) => (
-              <>
-                <TableRow key={user.id}>
-                  <TableCell align="center">{user.name}</TableCell>
-                  <TableCell align="center">{user.lastName}</TableCell>
-                  <TableCell align="center">{user.email}</TableCell>
-                  <TableCell align="center">
-                    <Link to={`/user/${user.id}`}>
-                      <Button variant="outlined">
-                        <ManageAccountsOutlinedIcon />
-                      </Button>
-                    </Link>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={onClickDelete}
-                    >
-                      <PersonRemoveOutlinedIcon />
+              <TableRow key={user.id}>
+                <TableCell align="center">{user.name}</TableCell>
+                <TableCell align="center">{user.last_name}</TableCell>
+                <TableCell align="center">{user.email}</TableCell>
+                <TableCell align="center">{user.job_type.name}</TableCell>
+                <TableCell align="center">
+                  <Link to={`/user/${user.id}`}>
+                    <Button variant="outlined">
+                      <ManageAccountsOutlinedIcon />
                     </Button>
-                  </TableCell>
-                </TableRow>
-                <DeleteUserModal
-                  id={user.id ? user.id : 0}
-                  openModal={openModal}
-                  onClose={onCloseModal}
-                />
-              </>
+                  </Link>
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => onClickDelete(user.id as number)}
+                  >
+                    <PersonRemoveOutlinedIcon />
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
@@ -81,6 +77,11 @@ export default function UserTable() {
         rowsPerPage={50}
         onPageChange={handleChangePage}
         page={page}
+      />
+      <DeleteUserModal
+        id={idSelected}
+        openModal={openModal}
+        onClose={onCloseModal}
       />
     </Box>
   );
@@ -94,6 +95,11 @@ const HeaderTable = () => {
       id: "email",
       label: "Correo",
       width: 170,
+    },
+    {
+      id: "job_title",
+      label: "Puesto",
+      width: 150,
     },
     {
       id: "action",
